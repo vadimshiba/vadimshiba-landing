@@ -12,6 +12,21 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const themeInitScript = `
+(() => {
+  try {
+    const saved = localStorage.getItem("theme");
+    const theme =
+      saved === "light" || saved === "dark"
+        ? saved
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    document.documentElement.dataset.theme = theme;
+  } catch {}
+})();
+`;
+
 export const metadata: Metadata = {
   title: "Vadim Shiba | Fullstack Engineer",
   description:
@@ -31,8 +46,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {children}
+      </body>
     </html>
   );
 }
