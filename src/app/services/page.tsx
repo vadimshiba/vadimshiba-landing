@@ -59,7 +59,7 @@ export default function ServicesPage() {
           </Link>
         </div>
         <h1>Services Grid</h1>
-        <p>Animated SVG icons + service states + delivery-focused structure.</p>
+        <p>Service modules with clear execution states and delivery-focused structure.</p>
       </motion.div>
 
       <section className={styles.grid}>

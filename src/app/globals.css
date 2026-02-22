@@ -690,6 +690,152 @@ a {
   color: var(--accent);
 }
 
+.device-lab {
+  margin-top: 0.9rem;
+  padding: 1.35rem;
+}
+
+.device-head h2 {
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  font-size: 1.25rem;
+}
+
+.device-head p {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.device-grid {
+  margin-top: 0.86rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.56rem;
+}
+
+.device-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.78rem;
+  background: color-mix(in srgb, var(--panel) 94%, transparent 6%);
+}
+
+.device-card span {
+  display: block;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text) 62%, transparent 38%);
+}
+
+.device-card strong {
+  display: block;
+  margin-top: 0.34rem;
+  font-size: 0.95rem;
+}
+
+.sensor-actions {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tiny-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.54rem 0.9rem;
+  font-size: 0.8rem;
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  background: color-mix(in srgb, var(--panel-strong) 86%, transparent 14%);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.tiny-btn:hover,
+.tiny-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 56%, transparent 44%);
+}
+
+.tiny-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sensor-badge {
+  border-radius: 999px;
+  padding: 0.45rem 0.74rem;
+  font-size: 0.76rem;
+  border: 1px solid var(--line);
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+}
+
+.sensor-granted {
+  border-color: color-mix(in srgb, var(--ok) 56%, transparent 44%);
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent 88%);
+}
+
+.sensor-denied {
+  border-color: color-mix(in srgb, var(--warn) 56%, transparent 44%);
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent 88%);
+}
+
+.sensor-idle,
+.sensor-unsupported {
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent 56%);
+  color: color-mix(in srgb, var(--accent) 70%, var(--text) 30%);
+  background: color-mix(in srgb, var(--accent) 10%, transparent 90%);
+}
+
+.tilt-stage {
+  margin-top: 0.88rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent 55%);
+  border-radius: 18px;
+  height: 130px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 10%, transparent 90%), transparent 60%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--line) 65%, transparent 35%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--line) 65%, transparent 35%) 1px,
+      transparent 1px
+    );
+  background-size: auto, 20px 20px, 20px 20px;
+}
+
+.tilt-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 76%, transparent 24%);
+  transform: translate(-50%, -50%);
+}
+
+.tilt-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 58%, transparent 42%);
+}
+
 @keyframes floatCloud {
   0%,
   100% {
@@ -743,6 +889,7 @@ a {
   .grid-row,
   .project-grid,
   .icon-grid,
+  .device-grid,
   .metrics {
     grid-template-columns: 1fr;
   }
@@ -773,7 +920,8 @@ a {
   .states,
   .stack,
   .projects,
-  .icon-lab {
+  .icon-lab,
+  .device-lab {
     padding: 0.98rem;
     border-radius: 22px;
   }
@@ -793,6 +941,14 @@ a {
 
   .page-nav {
     gap: 0.34rem;
+  }
+
+  .sensor-actions {
+    gap: 0.4rem;
+  }
+
+  .tiny-btn {
+    width: 100%;
   }
 }
 

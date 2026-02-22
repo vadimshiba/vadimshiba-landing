@@ -68,7 +68,7 @@ export default function ProjectsPage() {
           </Link>
         </div>
         <h1>Project Atlas</h1>
-        <p>Repository map with animated SVG icons and live interaction states.</p>
+        <p>Repository map with interaction-rich cards and production-focused project context.</p>
       </motion.div>
 
       <section className={styles.grid}>

@@ -20,6 +20,7 @@ import {
 
 type Theme = "light" | "dark";
 type Locale = "ru" | "en";
+type SensorState = "idle" | "granted" | "denied" | "unsupported";
 
 type StateItem = {
   id: string;
@@ -33,6 +34,15 @@ type RepoItem = {
   url: string;
   text: string;
   tags: string[];
+};
+
+type DeviceInfo = {
+  os: string;
+  device: string;
+  input: string;
+  vibration: boolean;
+  haptics: string;
+  hapticsAvailable: boolean;
 };
 
 type Content = {
@@ -57,12 +67,32 @@ type Content = {
   navHome: string;
   navProjects: string;
   navServices: string;
-  iconBlockTitle: string;
-  iconBlockSubtitle: string;
-  iconCards: Array<{ title: string; text: string; href: string; hrefLabel: string }>;
+  modulesTitle: string;
+  modulesSubtitle: string;
+  moduleCards: Array<{ title: string; text: string; href: string; hrefLabel: string }>;
+  deviceTitle: string;
+  deviceSubtitle: string;
+  sensorButton: string;
+  vibrationButton: string;
+  sensorIdle: string;
+  sensorReady: string;
+  sensorDenied: string;
+  sensorUnsupported: string;
+  osLabel: string;
+  deviceLabel: string;
+  inputLabel: string;
+  orientationLabel: string;
+  tiltLabel: string;
+  hapticLabel: string;
+  portrait: string;
+  landscape: string;
   footer: string;
   states: StateItem[];
   repos: RepoItem[];
+};
+
+type DeviceOrientationEventWithPermission = typeof DeviceOrientationEvent & {
+  requestPermission?: () => Promise<"granted" | "denied">;
 };
 
 const stackItems = [
@@ -91,10 +121,99 @@ const particles = Array.from({ length: 16 }, (_, i) => ({
   duration: 8 + (i % 6),
 }));
 
+const detectOs = (ua: string, platform: string): string => {
+  const fingerprint = `${ua} ${platform}`.toLowerCase();
+  if (fingerprint.includes("android")) return "Android";
+  if (fingerprint.includes("iphone") || fingerprint.includes("ipad") || fingerprint.includes("ipod")) return "iOS";
+  if (fingerprint.includes("mac")) return "macOS";
+  if (fingerprint.includes("win")) return "Windows";
+  if (fingerprint.includes("linux")) return "Linux";
+  return "Unknown";
+};
+
+const detectDevice = (ua: string, maxTouchPoints: number): string => {
+  const fingerprint = ua.toLowerCase();
+  const isTablet = /(ipad|tablet|playbook|silk)|(android(?!.*mobile))/i.test(fingerprint);
+  if (isTablet) return "Tablet";
+
+  const isMobile = /(mobile|iphone|ipod|android.*mobile|windows phone)/i.test(fingerprint);
+  if (isMobile) return "Mobile";
+
+  if (maxTouchPoints > 0) return "Touch device";
+  return "Desktop";
+};
+
+const readOrientationMode = (): string => {
+  if (typeof window === "undefined") {
+    return "landscape-primary";
+  }
+
+  const orientationType = window.screen?.orientation?.type;
+  if (orientationType) {
+    return orientationType;
+  }
+
+  return window.innerWidth >= window.innerHeight ? "landscape-primary" : "portrait-primary";
+};
+
+const hasTelegramHaptics = (): boolean => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const telegram = (window as unknown as {
+    Telegram?: {
+      WebApp?: {
+        HapticFeedback?: {
+          impactOccurred?: (style: "light" | "medium" | "heavy" | "rigid" | "soft") => void;
+          selectionChanged?: () => void;
+        };
+      };
+    };
+  }).Telegram;
+
+  return Boolean(telegram?.WebApp?.HapticFeedback);
+};
+
+const triggerHaptic = (kind: "light" | "medium" | "heavy" = "light") => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const telegram = (window as unknown as {
+    Telegram?: {
+      WebApp?: {
+        HapticFeedback?: {
+          impactOccurred?: (style: "light" | "medium" | "heavy" | "rigid" | "soft") => void;
+          selectionChanged?: () => void;
+        };
+      };
+    };
+  }).Telegram;
+
+  const tgHaptics = telegram?.WebApp?.HapticFeedback;
+  if (tgHaptics?.impactOccurred) {
+    tgHaptics.impactOccurred(kind);
+    return;
+  }
+
+  if (!("vibrate" in navigator)) {
+    return;
+  }
+
+  const pattern = kind === "heavy" ? [20, 12, 18] : kind === "medium" ? [14] : [9];
+  navigator.vibrate(pattern);
+};
+
+const applyTheme = (theme: Theme) => {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem("theme", theme);
+};
+
 const content: Record<Locale, Content> = {
   en: {
-    loadingTitle: "Launching experience",
-    loadingSubtitle: "Animating layers, telemetry and motion system",
+    loadingTitle: "Booting interface",
+    loadingSubtitle: "Preparing visuals, telemetry and interaction layer",
     switchLang: "RU",
     switchTheme: "Theme",
     lightMode: "Light",
@@ -123,9 +242,9 @@ const content: Record<Locale, Content> = {
     navHome: "Home",
     navProjects: "Projects",
     navServices: "Services",
-    iconBlockTitle: "Animated SVG systems",
-    iconBlockSubtitle: "Custom vector icons with independent motion patterns",
-    iconCards: [
+    modulesTitle: "Engineering modules",
+    modulesSubtitle: "Reusable vectors and interaction blocks for product surfaces",
+    moduleCards: [
       {
         title: "Security topology",
         text: "Protection layers and anti-bot strategy flows for production APIs.",
@@ -133,24 +252,40 @@ const content: Record<Locale, Content> = {
         hrefLabel: "Open services page",
       },
       {
-        title: "Product engineering",
-        text: "Architecture, delivery and iteration pipelines for shipped products.",
+        title: "Product architecture",
+        text: "Design, development and delivery patterns for shipped products.",
         href: "/projects",
         hrefLabel: "Open projects page",
       },
       {
-        title: "Launch workflows",
-        text: "Release readiness, observability and scaling plans for growth phases.",
+        title: "Release workflow",
+        text: "Readiness checks, observability and scaling plans for growth phases.",
         href: "/services",
-        hrefLabel: "View launch services",
+        hrefLabel: "View release services",
       },
       {
-        title: "Telegram ecosystems",
+        title: "Telegram ecosystem",
         text: "Bots, mini apps and automation patterns for real user traffic.",
         href: "/projects",
         hrefLabel: "View Telegram projects",
       },
     ],
+    deviceTitle: "Device interaction lab",
+    deviceSubtitle: "OS-aware behavior, haptic hooks, tilt and orientation telemetry",
+    sensorButton: "Enable motion sensors",
+    vibrationButton: "Trigger haptic pulse",
+    sensorIdle: "Sensors: awaiting access",
+    sensorReady: "Sensors: active",
+    sensorDenied: "Sensors: access denied",
+    sensorUnsupported: "Sensors: unsupported",
+    osLabel: "Operating system",
+    deviceLabel: "Device class",
+    inputLabel: "Primary input",
+    orientationLabel: "Screen orientation",
+    tiltLabel: "Tilt reading",
+    hapticLabel: "Haptic channel",
+    portrait: "Portrait",
+    landscape: "Landscape",
     footer:
       "Open to collaboration on product engineering, backend systems and Telegram ecosystems.",
     states: [
@@ -201,8 +336,8 @@ const content: Record<Locale, Content> = {
     ],
   },
   ru: {
-    loadingTitle: "Запуск интерфейса",
-    loadingSubtitle: "Собираю слои, анимации и телеметрию",
+    loadingTitle: "Загрузка интерфейса",
+    loadingSubtitle: "Подготавливаю визуал, телеметрию и слой взаимодействий",
     switchLang: "EN",
     switchTheme: "Тема",
     lightMode: "Светлая",
@@ -231,9 +366,9 @@ const content: Record<Locale, Content> = {
     navHome: "Главная",
     navProjects: "Проекты",
     navServices: "Сервисы",
-    iconBlockTitle: "Анимированные SVG-системы",
-    iconBlockSubtitle: "Векторные иконки с разными независимыми паттернами движения",
-    iconCards: [
+    modulesTitle: "Инженерные модули",
+    modulesSubtitle: "Переиспользуемые векторные и интерактивные блоки для продуктовых поверхностей",
+    moduleCards: [
       {
         title: "Security topology",
         text: "Слои защиты и anti-bot сценарии для production API.",
@@ -241,24 +376,40 @@ const content: Record<Locale, Content> = {
         hrefLabel: "Открыть страницу сервисов",
       },
       {
-        title: "Product engineering",
-        text: "Архитектура, delivery и итерации для реально запущенных продуктов.",
+        title: "Product architecture",
+        text: "Проектирование, разработка и delivery-паттерны для реальных продуктов.",
         href: "/projects",
         hrefLabel: "Открыть страницу проектов",
       },
       {
-        title: "Launch workflows",
-        text: "Готовность к релизу, наблюдаемость и планирование масштабирования.",
+        title: "Release workflow",
+        text: "Проверка готовности к релизу, наблюдаемость и планы масштабирования.",
         href: "/services",
-        hrefLabel: "Смотреть launch-сервисы",
+        hrefLabel: "Смотреть release-сервисы",
       },
       {
-        title: "Telegram ecosystems",
+        title: "Telegram ecosystem",
         text: "Боты, мини-аппы и автоматизации для реальной пользовательской нагрузки.",
         href: "/projects",
         hrefLabel: "Смотреть Telegram-проекты",
       },
     ],
+    deviceTitle: "Лаборатория взаимодействий",
+    deviceSubtitle: "Поведение под ОС/устройство, haptic hooks, наклон и ориентация",
+    sensorButton: "Включить motion-сенсоры",
+    vibrationButton: "Выполнить haptic-пульс",
+    sensorIdle: "Сенсоры: ожидают доступ",
+    sensorReady: "Сенсоры: активны",
+    sensorDenied: "Сенсоры: доступ отклонён",
+    sensorUnsupported: "Сенсоры: не поддерживаются",
+    osLabel: "Операционная система",
+    deviceLabel: "Класс устройства",
+    inputLabel: "Основной ввод",
+    orientationLabel: "Ориентация экрана",
+    tiltLabel: "Показания наклона",
+    hapticLabel: "Haptic-канал",
+    portrait: "Портрет",
+    landscape: "Ландшафт",
     footer:
       "Открыт к сотрудничеству: product engineering, backend-системы и Telegram-экосистема.",
     states: [
@@ -310,19 +461,16 @@ const content: Record<Locale, Content> = {
   },
 };
 
-const applyTheme = (theme: Theme) => {
-  document.documentElement.dataset.theme = theme;
-  localStorage.setItem("theme", theme);
-};
-
 export default function Home() {
   const reduceMotion = useReducedMotion();
+
   const [locale, setLocale] = useState<Locale>(() => {
     if (typeof window === "undefined") {
       return "en";
     }
     return navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en";
   });
+
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") {
       return "light";
@@ -333,12 +481,51 @@ export default function Home() {
     }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
+
+  const [deviceInfo] = useState<DeviceInfo>(() => {
+    if (typeof window === "undefined") {
+      return {
+        os: "Unknown",
+        device: "Unknown",
+        input: "Pointer",
+        vibration: false,
+        haptics: "Unavailable",
+        hapticsAvailable: false,
+      };
+    }
+
+    const ua = navigator.userAgent;
+    const platform = navigator.platform;
+    const maxTouchPoints = navigator.maxTouchPoints ?? 0;
+    const hasTouch = maxTouchPoints > 0 || "ontouchstart" in window;
+    const os = detectOs(ua, platform);
+    const device = detectDevice(ua, maxTouchPoints);
+    const vibration = "vibrate" in navigator;
+    const tgHaptics = hasTelegramHaptics();
+
+    return {
+      os,
+      device,
+      input: hasTouch ? "Touch" : "Pointer",
+      vibration,
+      haptics: tgHaptics ? "Telegram WebApp" : vibration ? "Vibration API" : "Unavailable",
+      hapticsAvailable: tgHaptics || vibration,
+    };
+  });
+
   const [preloading, setPreloading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [activeStateId, setActiveStateId] = useState("discover");
+  const [sensorState, setSensorState] = useState<SensorState>(() => {
+    if (typeof window === "undefined") {
+      return "idle";
+    }
+    return "DeviceOrientationEvent" in window ? "idle" : "unsupported";
+  });
+  const [screenMode, setScreenMode] = useState(() => readOrientationMode());
+  const [tiltReadout, setTiltReadout] = useState({ x: 0, y: 0 });
 
   const { scrollY, scrollYProgress } = useScroll();
-
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const smoothX = useSpring(mouseX, { stiffness: 65, damping: 18, mass: 0.5 });
@@ -351,9 +538,51 @@ export default function Home() {
   const heroY = useTransform(scrollY, [0, 800], [0, -72]);
   const gridDrift = useTransform(scrollYProgress, [0, 1], [0, -180]);
   const glowShift = useTransform(() => smoothX.get() * 24 + smoothY.get() * 16);
+  const tiltDotX = useTransform(smoothX, (v) => v * 45);
+  const tiltDotY = useTransform(smoothY, (v) => v * 30);
 
   const copy = content[locale];
   const activeState = copy.states.find((item) => item.id === activeStateId) ?? copy.states[0];
+
+  const orientationLabel =
+    screenMode.includes("portrait")
+      ? copy.portrait
+      : screenMode.includes("landscape")
+        ? copy.landscape
+        : screenMode;
+
+  const sensorStatusText =
+    sensorState === "granted"
+      ? copy.sensorReady
+      : sensorState === "denied"
+        ? copy.sensorDenied
+        : sensorState === "unsupported"
+          ? copy.sensorUnsupported
+          : copy.sensorIdle;
+
+  const requestDeviceSensors = async () => {
+    if (sensorState === "unsupported") {
+      return;
+    }
+
+    try {
+      const orientationApi = DeviceOrientationEvent as DeviceOrientationEventWithPermission;
+      if (typeof orientationApi.requestPermission === "function") {
+        const permission = await orientationApi.requestPermission();
+        if (permission !== "granted") {
+          setSensorState("denied");
+          triggerHaptic("heavy");
+          return;
+        }
+      }
+
+      setSensorState("granted");
+      triggerHaptic("medium");
+    } catch {
+      setSensorState("denied");
+      triggerHaptic("heavy");
+    }
+  };
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -369,6 +598,31 @@ export default function Home() {
       document.body.style.overflow = "";
     };
   }, [preloading]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setScreenMode(readOrientationMode());
+    };
+
+    const onOrientation = () => {
+      setScreenMode(readOrientationMode());
+    };
+
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onOrientation);
+
+    const screenOrientation = window.screen?.orientation;
+    const onScreenOrientationChange = () => {
+      setScreenMode(readOrientationMode());
+    };
+    screenOrientation?.addEventListener?.("change", onScreenOrientationChange);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onOrientation);
+      screenOrientation?.removeEventListener?.("change", onScreenOrientationChange);
+    };
+  }, []);
 
   useEffect(() => {
     let rafId = 0;
@@ -400,7 +654,7 @@ export default function Home() {
   }, [reduceMotion]);
 
   useEffect(() => {
-    if (reduceMotion) {
+    if (reduceMotion || sensorState === "granted") {
       return;
     }
 
@@ -415,7 +669,27 @@ export default function Home() {
     return () => {
       window.removeEventListener("mousemove", onMove);
     };
-  }, [mouseX, mouseY, reduceMotion]);
+  }, [mouseX, mouseY, reduceMotion, sensorState]);
+
+  useEffect(() => {
+    if (reduceMotion || sensorState !== "granted") {
+      return;
+    }
+
+    const onDeviceTilt = (event: DeviceOrientationEvent) => {
+      const gamma = Math.max(-45, Math.min(45, event.gamma ?? 0));
+      const beta = Math.max(-45, Math.min(45, event.beta ?? 0));
+
+      mouseX.set(gamma / 45);
+      mouseY.set(beta / 45);
+      setTiltReadout({ x: Math.round(gamma), y: Math.round(beta) });
+    };
+
+    window.addEventListener("deviceorientation", onDeviceTilt, true);
+    return () => {
+      window.removeEventListener("deviceorientation", onDeviceTilt, true);
+    };
+  }, [mouseX, mouseY, reduceMotion, sensorState]);
 
   return (
     <>
@@ -439,7 +713,13 @@ export default function Home() {
               />
               <p>{copy.loadingTitle}</p>
               <span>{copy.loadingSubtitle}</span>
-              <div className="preloader-bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+              <div
+                className="preloader-bar"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
                 <motion.i
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -510,13 +790,13 @@ export default function Home() {
         >
           <div className="signature">VS</div>
           <nav className="page-nav" aria-label="Primary navigation">
-            <Link href="/" className="nav-link active">
+            <Link href="/" className="nav-link active" onPointerDown={() => triggerHaptic("light")}>
               {copy.navHome}
             </Link>
-            <Link href="/projects" className="nav-link">
+            <Link href="/projects" className="nav-link" onPointerDown={() => triggerHaptic("light")}>
               {copy.navProjects}
             </Link>
-            <Link href="/services" className="nav-link">
+            <Link href="/services" className="nav-link" onPointerDown={() => triggerHaptic("light")}>
               {copy.navServices}
             </Link>
           </nav>
@@ -527,6 +807,7 @@ export default function Home() {
               onClick={() => {
                 const nextLocale: Locale = locale === "en" ? "ru" : "en";
                 setLocale(nextLocale);
+                triggerHaptic("light");
               }}
               aria-label="Switch language"
             >
@@ -538,6 +819,7 @@ export default function Home() {
               onClick={() => {
                 const nextTheme: Theme = theme === "dark" ? "light" : "dark";
                 setTheme(nextTheme);
+                triggerHaptic("light");
               }}
               aria-label={copy.switchTheme}
             >
@@ -564,7 +846,13 @@ export default function Home() {
           <p className="lead">{copy.heroLead}</p>
 
           <div className="actions">
-            <motion.a whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }} className="btn primary" href="mailto:vadimshiba@duck.com">
+            <motion.a
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn primary"
+              href="mailto:vadimshiba@duck.com"
+              onPointerDown={() => triggerHaptic("light")}
+            >
               {copy.email}
             </motion.a>
             <motion.a
@@ -574,6 +862,7 @@ export default function Home() {
               href="https://github.com/vadimshiba"
               target="_blank"
               rel="noreferrer"
+              onPointerDown={() => triggerHaptic("light")}
             >
               GitHub
             </motion.a>
@@ -584,6 +873,7 @@ export default function Home() {
               href="https://bitsquad.team"
               target="_blank"
               rel="noreferrer"
+              onPointerDown={() => triggerHaptic("light")}
             >
               {copy.website}
             </motion.a>
@@ -624,7 +914,10 @@ export default function Home() {
                   role="tab"
                   aria-selected={activeState.id === item.id}
                   className={`state-pill ${activeState.id === item.id ? "active" : ""}`}
-                  onClick={() => setActiveStateId(item.id)}
+                  onClick={() => {
+                    setActiveStateId(item.id);
+                    triggerHaptic("light");
+                  }}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -702,6 +995,7 @@ export default function Home() {
               href="https://github.com/vadimshiba?tab=repositories"
               target="_blank"
               rel="noreferrer"
+              onPointerDown={() => triggerHaptic("light")}
             >
               {copy.viewAll}
             </motion.a>
@@ -720,6 +1014,7 @@ export default function Home() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, delay: index * 0.08 }}
                 whileHover={{ y: -6, rotateX: 2, rotateY: -2, scale: 1.012 }}
+                onPointerDown={() => triggerHaptic("light")}
               >
                 <h3>{repo.name}</h3>
                 <p>{repo.text}</p>
@@ -741,11 +1036,11 @@ export default function Home() {
           transition={{ duration: 0.6 }}
         >
           <div className="icons-head">
-            <h2>{copy.iconBlockTitle}</h2>
-            <p>{copy.iconBlockSubtitle}</p>
+            <h2>{copy.modulesTitle}</h2>
+            <p>{copy.modulesSubtitle}</p>
           </div>
           <div className="icon-grid">
-            {copy.iconCards.map((card, index) => {
+            {copy.moduleCards.map((card, index) => {
               const iconMap = [ShieldPulseIcon, OrbitCodeIcon, RocketLaunchIcon, BotWaveIcon];
               const Icon = iconMap[index % iconMap.length];
 
@@ -762,10 +1057,77 @@ export default function Home() {
                   <Icon className="feature-icon" />
                   <h3>{card.title}</h3>
                   <p>{card.text}</p>
-                  <Link href={card.href}>{card.hrefLabel}</Link>
+                  <Link href={card.href} onPointerDown={() => triggerHaptic("light")}>
+                    {card.hrefLabel}
+                  </Link>
                 </motion.article>
               );
             })}
+          </div>
+        </motion.section>
+
+        <motion.section
+          className="panel device-lab"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.22 }}
+          transition={{ duration: 0.62 }}
+        >
+          <div className="device-head">
+            <h2>{copy.deviceTitle}</h2>
+            <p>{copy.deviceSubtitle}</p>
+          </div>
+
+          <div className="device-grid">
+            <article className="device-card">
+              <span>{copy.osLabel}</span>
+              <strong>{deviceInfo.os}</strong>
+            </article>
+            <article className="device-card">
+              <span>{copy.deviceLabel}</span>
+              <strong>{deviceInfo.device}</strong>
+            </article>
+            <article className="device-card">
+              <span>{copy.inputLabel}</span>
+              <strong>{deviceInfo.input}</strong>
+            </article>
+            <article className="device-card">
+              <span>{copy.orientationLabel}</span>
+              <strong>{orientationLabel}</strong>
+            </article>
+            <article className="device-card">
+              <span>{copy.tiltLabel}</span>
+              <strong>{`${tiltReadout.x} / ${tiltReadout.y}`}</strong>
+            </article>
+            <article className="device-card">
+              <span>{copy.hapticLabel}</span>
+              <strong>{deviceInfo.haptics}</strong>
+            </article>
+          </div>
+
+          <div className="sensor-actions">
+            <button
+              type="button"
+              className="tiny-btn"
+              onClick={requestDeviceSensors}
+              disabled={sensorState === "unsupported" || sensorState === "granted"}
+            >
+              {copy.sensorButton}
+            </button>
+            <button
+              type="button"
+              className="tiny-btn"
+              onClick={() => triggerHaptic("heavy")}
+              disabled={!deviceInfo.hapticsAvailable}
+            >
+              {copy.vibrationButton}
+            </button>
+            <span className={`sensor-badge sensor-${sensorState}`}>{sensorStatusText}</span>
+          </div>
+
+          <div className="tilt-stage" aria-hidden="true">
+            <div className="tilt-center" />
+            <motion.div className="tilt-dot" style={{ x: tiltDotX, y: tiltDotY }} />
           </div>
         </motion.section>
 
