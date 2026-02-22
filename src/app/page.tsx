@@ -9,7 +9,14 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  BotWaveIcon,
+  OrbitCodeIcon,
+  RocketLaunchIcon,
+  ShieldPulseIcon,
+} from "@/components/animated-icons";
 
 type Theme = "light" | "dark";
 type Locale = "ru" | "en";
@@ -47,6 +54,12 @@ type Content = {
   highlights: string[];
   projectsTitle: string;
   viewAll: string;
+  navHome: string;
+  navProjects: string;
+  navServices: string;
+  iconBlockTitle: string;
+  iconBlockSubtitle: string;
+  iconCards: Array<{ title: string; text: string; href: string; hrefLabel: string }>;
   footer: string;
   states: StateItem[];
   repos: RepoItem[];
@@ -107,6 +120,37 @@ const content: Record<Locale, Content> = {
     ],
     projectsTitle: "Featured repositories",
     viewAll: "View all",
+    navHome: "Home",
+    navProjects: "Projects",
+    navServices: "Services",
+    iconBlockTitle: "Animated SVG systems",
+    iconBlockSubtitle: "Custom vector icons with independent motion patterns",
+    iconCards: [
+      {
+        title: "Security topology",
+        text: "Protection layers and anti-bot strategy flows for production APIs.",
+        href: "/services",
+        hrefLabel: "Open services page",
+      },
+      {
+        title: "Product engineering",
+        text: "Architecture, delivery and iteration pipelines for shipped products.",
+        href: "/projects",
+        hrefLabel: "Open projects page",
+      },
+      {
+        title: "Launch workflows",
+        text: "Release readiness, observability and scaling plans for growth phases.",
+        href: "/services",
+        hrefLabel: "View launch services",
+      },
+      {
+        title: "Telegram ecosystems",
+        text: "Bots, mini apps and automation patterns for real user traffic.",
+        href: "/projects",
+        hrefLabel: "View Telegram projects",
+      },
+    ],
     footer:
       "Open to collaboration on product engineering, backend systems and Telegram ecosystems.",
     states: [
@@ -184,6 +228,37 @@ const content: Record<Locale, Content> = {
     ],
     projectsTitle: "Избранные репозитории",
     viewAll: "Смотреть все",
+    navHome: "Главная",
+    navProjects: "Проекты",
+    navServices: "Сервисы",
+    iconBlockTitle: "Анимированные SVG-системы",
+    iconBlockSubtitle: "Векторные иконки с разными независимыми паттернами движения",
+    iconCards: [
+      {
+        title: "Security topology",
+        text: "Слои защиты и anti-bot сценарии для production API.",
+        href: "/services",
+        hrefLabel: "Открыть страницу сервисов",
+      },
+      {
+        title: "Product engineering",
+        text: "Архитектура, delivery и итерации для реально запущенных продуктов.",
+        href: "/projects",
+        hrefLabel: "Открыть страницу проектов",
+      },
+      {
+        title: "Launch workflows",
+        text: "Готовность к релизу, наблюдаемость и планирование масштабирования.",
+        href: "/services",
+        hrefLabel: "Смотреть launch-сервисы",
+      },
+      {
+        title: "Telegram ecosystems",
+        text: "Боты, мини-аппы и автоматизации для реальной пользовательской нагрузки.",
+        href: "/projects",
+        hrefLabel: "Смотреть Telegram-проекты",
+      },
+    ],
     footer:
       "Открыт к сотрудничеству: product engineering, backend-системы и Telegram-экосистема.",
     states: [
@@ -434,6 +509,17 @@ export default function Home() {
           transition={{ delay: 0.18, duration: 0.55 }}
         >
           <div className="signature">VS</div>
+          <nav className="page-nav" aria-label="Primary navigation">
+            <Link href="/" className="nav-link active">
+              {copy.navHome}
+            </Link>
+            <Link href="/projects" className="nav-link">
+              {copy.navProjects}
+            </Link>
+            <Link href="/services" className="nav-link">
+              {copy.navServices}
+            </Link>
+          </nav>
           <div className="bar-controls">
             <button
               type="button"
@@ -644,6 +730,42 @@ export default function Home() {
                 </div>
               </motion.a>
             ))}
+          </div>
+        </motion.section>
+
+        <motion.section
+          className="panel icon-lab"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="icons-head">
+            <h2>{copy.iconBlockTitle}</h2>
+            <p>{copy.iconBlockSubtitle}</p>
+          </div>
+          <div className="icon-grid">
+            {copy.iconCards.map((card, index) => {
+              const iconMap = [ShieldPulseIcon, OrbitCodeIcon, RocketLaunchIcon, BotWaveIcon];
+              const Icon = iconMap[index % iconMap.length];
+
+              return (
+                <motion.article
+                  key={card.title}
+                  className="icon-card"
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.45, delay: index * 0.08 }}
+                  whileHover={{ y: -5, scale: 1.01 }}
+                >
+                  <Icon className="feature-icon" />
+                  <h3>{card.title}</h3>
+                  <p>{card.text}</p>
+                  <Link href={card.href}>{card.hrefLabel}</Link>
+                </motion.article>
+              );
+            })}
           </div>
         </motion.section>
 

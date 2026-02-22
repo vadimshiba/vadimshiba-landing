@@ -237,6 +237,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
+  flex-wrap: wrap;
 }
 
 .signature {
@@ -257,6 +258,36 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  margin-right: 0.3rem;
+}
+
+.nav-link {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.44rem 0.78rem;
+  font-size: 0.8rem;
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  background: color-mix(in srgb, var(--panel-strong) 84%, transparent 16%);
+  color: color-mix(in srgb, var(--text) 84%, transparent 16%);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 56%, transparent 44%);
+}
+
+.nav-link.active {
+  border-color: color-mix(in srgb, var(--accent) 56%, transparent 44%);
+  color: var(--accent);
 }
 
 .control-btn {
@@ -599,6 +630,66 @@ a {
   color: var(--muted);
 }
 
+.icon-lab {
+  margin-top: 0.9rem;
+  padding: 1.35rem;
+}
+
+.icons-head h2 {
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  font-size: 1.25rem;
+}
+
+.icons-head p {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.icon-grid {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.62rem;
+}
+
+.icon-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 0.9rem;
+  background: color-mix(in srgb, var(--panel) 94%, transparent 6%);
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.feature-icon {
+  width: 42px;
+  height: 42px;
+  color: var(--accent);
+}
+
+.icon-card h3 {
+  margin-top: 0.7rem;
+  font-family: var(--font-space-grotesk), "Segoe UI", sans-serif;
+  font-size: 1rem;
+}
+
+.icon-card p {
+  margin-top: 0.46rem;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.89rem;
+}
+
+.icon-card a {
+  margin-top: auto;
+  padding-top: 0.72rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 @keyframes floatCloud {
   0%,
   100% {
@@ -651,12 +742,19 @@ a {
 @media (max-width: 980px) {
   .grid-row,
   .project-grid,
+  .icon-grid,
   .metrics {
     grid-template-columns: 1fr;
   }
 
   .repo-card {
     min-height: 165px;
+  }
+
+  .page-nav {
+    order: 3;
+    margin: 0;
+    width: 100%;
   }
 }
 
@@ -674,7 +772,8 @@ a {
   .hero,
   .states,
   .stack,
-  .projects {
+  .projects,
+  .icon-lab {
     padding: 0.98rem;
     border-radius: 22px;
   }
@@ -685,6 +784,15 @@ a {
 
   .preloader-inner {
     padding: 1rem;
+  }
+
+  .bar-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .page-nav {
+    gap: 0.34rem;
   }
 }
 
