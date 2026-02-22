@@ -1,128 +1,267 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 
-const metrics = [
-  { label: "Years shipping", value: "9+" },
-  { label: "Launched products", value: "34" },
-  { label: "Global clients", value: "22" },
+type DeliveryState = {
+  id: string;
+  label: string;
+  summary: string;
+  tone: "ok" | "warn" | "accent";
+};
+
+const deliveryStates: DeliveryState[] = [
+  {
+    id: "discover",
+    label: "Discover",
+    summary: "Map product constraints, abuse vectors, and architecture boundaries.",
+    tone: "ok",
+  },
+  {
+    id: "design",
+    label: "Design",
+    summary: "Define API contracts, UX flows, and infrastructure plans before implementation.",
+    tone: "accent",
+  },
+  {
+    id: "ship",
+    label: "Ship",
+    summary: "Deploy incrementally with telemetry, rollback paths, and measurable goals.",
+    tone: "warn",
+  },
+  {
+    id: "scale",
+    label: "Scale",
+    summary: "Harden reliability with observability, rate-limits, and resilient workflows.",
+    tone: "ok",
+  },
+];
+
+const stack = [
+  "Python",
+  "FastAPI",
+  "Flask",
+  "SQLAlchemy",
+  "Redis",
+  "React",
+  "JavaScript",
+  "Docker",
+  "Linux",
+  "Nginx",
+  "Telegram Bots",
+  "Mini Apps",
+];
+
+const featuredRepos = [
+  {
+    name: "antibot-shield",
+    url: "https://github.com/vadimshiba/antibot-shield",
+    text: "Adaptive L7 anti-bot middleware for FastAPI/Starlette with JS challenge, PoW, and replay hardening.",
+    tags: ["Python", "FastAPI", "Security"],
+  },
+  {
+    name: "dot_daily",
+    url: "https://github.com/vadimshiba/dot_daily",
+    text: "iOS app for daily planning with a clean, focused workflow.",
+    tags: ["Swift", "iOS"],
+  },
+  {
+    name: "telegram_file_bot",
+    url: "https://github.com/vadimshiba/telegram_file_bot",
+    text: "Telegram bot that delivers files while enforcing anti-spam verification flows.",
+    tags: ["Python", "Telegram"],
+  },
 ];
 
 const highlights = [
-  {
-    title: "Design systems",
-    text: "Build and scale premium interfaces with clear tokens, motion language, and resilient components.",
-  },
-  {
-    title: "Product strategy",
-    text: "Turn raw ideas into sharp roadmaps and measurable releases with focused execution.",
-  },
-  {
-    title: "Engineering",
-    text: "Deliver clean, reliable web products with modern tooling, CI, and performance budgets.",
-  },
+  "Backend APIs + Frontend UX + DevOps delivery",
+  "Telegram-first products for real users",
+  "Production systems built for real traffic",
 ];
 
-const states = ["Discovery", "Design", "Build", "Launch", "Growth"];
-
 export default function Home() {
+  const [activeState, setActiveState] = useState<DeliveryState>(deliveryStates[0]);
+
   return (
-    <main className="page-shell">
-      <div className="noise" aria-hidden="true" />
+    <main className="landing">
+      <div className="ambient" aria-hidden="true">
+        <motion.span
+          className="orb orb-a"
+          animate={{ y: [0, -14, 0], x: [0, 10, 0] }}
+          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 8, ease: "easeInOut" }}
+        />
+        <motion.span
+          className="orb orb-b"
+          animate={{ y: [0, 12, 0], x: [0, -8, 0] }}
+          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 10, ease: "easeInOut" }}
+        />
+      </div>
+
       <motion.section
-        className="hero"
+        className="hero panel"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+        transition={{ duration: 0.75, ease: [0.2, 0.8, 0.2, 1] }}
       >
-        <p className="eyebrow">VADIM SHIBA</p>
-        <h1>Digital визитка в Apple-style с живой анимацией.</h1>
+        <p className="eyebrow">VADIM SHIBA / FULLSTACK ENGINEER</p>
+        <h1>Designing real products, not toy apps.</h1>
         <p className="lead">
-          Product designer & frontend engineer. Помогаю запускать аккуратные продукты:
-          от идеи до продакшна.
+          Building backend APIs, web frontends, Telegram-native flows, and delivery pipelines
+          that can survive real traffic.
         </p>
-        <div className="cta-row">
-          <motion.a
-            whileHover={{ y: -2, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="btn btn-primary"
-            href="mailto:vadim@example.com"
-          >
-            Написать
+
+        <div className="actions">
+          <motion.a whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="btn primary" href="mailto:vadimshiba@duck.com">
+            Email
           </motion.a>
           <motion.a
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="btn btn-ghost"
+            className="btn ghost"
             href="https://github.com/vadimshiba"
             target="_blank"
             rel="noreferrer"
           >
             GitHub
           </motion.a>
+          <motion.a
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="btn ghost"
+            href="https://bitsquad.team"
+            target="_blank"
+            rel="noreferrer"
+          >
+            bitsquad.team
+          </motion.a>
+        </div>
+
+        <div className="metrics">
+          <article>
+            <span>Location</span>
+            <strong>Astana, Kazakhstan</strong>
+          </article>
+          <article>
+            <span>Public repositories</span>
+            <strong>5</strong>
+          </article>
+          <article>
+            <span>Current focus</span>
+            <strong>Product engineering</strong>
+          </article>
         </div>
       </motion.section>
 
-      <section className="metrics" aria-label="Key metrics">
-        {metrics.map((item, index) => (
-          <motion.article
-            className="metric-card"
-            key={item.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.6 }}
-            transition={{ duration: 0.55, delay: index * 0.12 }}
-            whileHover={{ y: -4 }}
-          >
-            <p>{item.label}</p>
-            <strong>{item.value}</strong>
-          </motion.article>
-        ))}
-      </section>
+      <section className="grid-row">
+        <motion.section
+          className="panel states"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2>Live telemetry</h2>
+          <p className="section-text">pipeline: build -&gt; ship -&gt; iterate</p>
+          <div className="state-list" role="tablist" aria-label="Delivery states">
+            {deliveryStates.map((item) => (
+              <motion.button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={activeState.id === item.id}
+                className={`state-pill ${activeState.id === item.id ? "active" : ""}`}
+                onClick={() => setActiveState(item)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {item.label}
+              </motion.button>
+            ))}
+          </div>
 
-      <section className="cards" aria-label="Core services">
-        {highlights.map((card, index) => (
-          <motion.article
-            className="glass-card"
-            key={card.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, delay: index * 0.15 }}
-            whileHover={{ scale: 1.015 }}
-          >
-            <h2>{card.title}</h2>
-            <p>{card.text}</p>
-            <motion.span whileHover={{ x: 6 }} className="card-link">
-              Explore →
-            </motion.span>
-          </motion.article>
-        ))}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeState.id}
+              className={`state-card tone-${activeState.tone}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22 }}
+            >
+              <h3>{activeState.label}</h3>
+              <p>{activeState.summary}</p>
+            </motion.div>
+          </AnimatePresence>
+        </motion.section>
+
+        <motion.section
+          className="panel stack"
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.08 }}
+        >
+          <h2>Tech matrix</h2>
+          <div className="chip-grid">
+            {stack.map((item, i) => (
+              <motion.span
+                key={item}
+                className="chip"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: i * 0.04 }}
+                whileHover={{ scale: 1.06 }}
+              >
+                {item}
+              </motion.span>
+            ))}
+          </div>
+
+          <ul className="highlights">
+            {highlights.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </motion.section>
       </section>
 
       <motion.section
-        className="timeline"
-        initial={{ opacity: 0, y: 24 }}
+        className="panel projects"
+        initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.35 }}
-        transition={{ duration: 0.7 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.65 }}
       >
-        <h3>States of delivery</h3>
-        <div className="state-row">
-          {states.map((state, i) => (
-            <motion.button
-              key={state}
-              type="button"
-              className="state-pill"
-              initial={{ opacity: 0, scale: 0.88 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.12 * i, duration: 0.45 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.96 }}
+        <div className="projects-head">
+          <h2>Featured repositories</h2>
+          <a href="https://github.com/vadimshiba?tab=repositories" target="_blank" rel="noreferrer">
+            View all
+          </a>
+        </div>
+
+        <div className="project-grid">
+          {featuredRepos.map((repo, idx) => (
+            <motion.a
+              key={repo.name}
+              href={repo.url}
+              target="_blank"
+              rel="noreferrer"
+              className="repo-card"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.45, delay: idx * 0.08 }}
+              whileHover={{ y: -4, scale: 1.01 }}
             >
-              {state}
-            </motion.button>
+              <h3>{repo.name}</h3>
+              <p>{repo.text}</p>
+              <div className="repo-tags">
+                {repo.tags.map((tag) => (
+                  <span key={`${repo.name}-${tag}`}>{tag}</span>
+                ))}
+              </div>
+            </motion.a>
           ))}
         </div>
       </motion.section>

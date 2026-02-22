@@ -1,6 +1,6 @@
-# Vadim Shiba - Apple-style Business Card
+# vadimshiba-landing
 
-Анимированная визитка на Next.js для деплоя в Vercel через GitHub.
+Personal landing page for `vadimshiba`, built with Next.js and Framer Motion.
 
 ## Stack
 
@@ -8,28 +8,20 @@
 - TypeScript
 - Framer Motion
 
-## Local run
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+App runs on `http://localhost:3000`.
 
-## Production build
+## Deploy with Vercel + GitHub
 
-```bash
-npm run build
-npm run start
-```
+1. Push changes to `main`.
+2. Open Vercel dashboard.
+3. Import `vadimshiba/vadimshiba-landing`.
+4. Deploy as a Next.js project.
 
-## Deploy to Vercel (GitHub)
-
-1. Push repo to GitHub.
-2. Open Vercel dashboard and click **Add New... -> Project**.
-3. Import this GitHub repository.
-4. Framework is detected as **Next.js** automatically.
-5. Click **Deploy**.
-
-After first deploy, every push to `main` will auto-deploy.
+Every next push to `main` triggers an automatic redeploy.

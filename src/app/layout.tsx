@@ -13,13 +13,15 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Vadim Shiba | Product Designer & Engineer",
+  title: "Vadim Shiba | Fullstack Engineer",
   description:
-    "Apple-style digital business card with animated sections, service highlights, and contact CTA.",
+    "Fullstack engineer focused on backend APIs, frontend UX, Telegram products, and production delivery.",
   openGraph: {
-    title: "Vadim Shiba",
-    description: "Product designer & frontend engineer.",
+    title: "Vadim Shiba | Fullstack Engineer",
+    description:
+      "Backend APIs + frontend UX + DevOps delivery for production systems and Telegram ecosystems.",
     type: "website",
+    url: "https://vadimshiba-landing.vercel.app",
   },
 };
 
@@ -29,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>{children}</body>
     </html>
   );
